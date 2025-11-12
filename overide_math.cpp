@@ -1,7 +1,14 @@
+//Name: Molly Masalskis
+//KUID: 3171860
+//Date: 11/11/25
+//Assignment: EECS 348 Lab11
+//Purpose: Matrix opperations with opperator overflow and exprementing with classes in C++
 #include <iostream>
 #include <fstream> 
 #include <string>
 #include <stdio.h>
+#include <limits>
+#include <sstream>
 
 class MathMatrix{
     private:
@@ -18,19 +25,16 @@ class MathMatrix{
     }
 
     ~MathMatrix(){
-        for(int i = 0; i < n; i++){
-            delete[] data[i];
-            delete[] data;
-        }
+        clear();
     }
 
     void clear(){
         if(data){
             for(int i = 0; i < n; i++){
                 delete[] data[i];
-                delete[] data;
-                data = nullptr;
             }
+            delete[] data;
+            data = nullptr;
             n = 0;
         }
     }
@@ -54,7 +58,9 @@ class MathMatrix{
             for(int j = 0; j<n; j++){
                 std::cout << data[i][j] << "\t";
             }
+            std::cout << "\n";
         }
+        std::cout << "\n";
     }
 
     MathMatrix operator+(const MathMatrix& other) const{
@@ -92,14 +98,36 @@ class MathMatrix{
         return n;
     }
 
-    double* get_row(int index) const{
-        return data[index];
+    // make a deep copy
+MathMatrix(const MathMatrix& other) {
+    n = other.n;
+    data = new double*[n];
+    for (int i = 0; i < n; ++i) {
+        data[i] = new double[n];
+        for (int j = 0; j < n; ++j) {
+            data[i][j] = other.data[i][j]; 
+        }
     }
+}
 
-    void swap_row(int index, double* val){
-        data[index] = val;
+
+MathMatrix& operator=(const MathMatrix& other) {
+    if (this == &other) return *this;
+
+    for (int i = 0; i < n; ++i) {
+        delete[] data[i];
     }
-
+    delete[] data;
+    n = other.n;
+    data = new double*[n];
+    for (int i = 0; i < n; ++i) {
+        data[i] = new double[n];
+        for (int j = 0; j < n; ++j) {
+            data[i][j] = other.data[i][j];
+        }
+    }
+    return *this;
+}
 
     
 
@@ -140,10 +168,12 @@ void swap_row(MathMatrix a, int index1 = 0, int index2 = 1){
         std::cerr << "Invalid Index\n";
         throw std::exception();
     }
-    double* temp = a.get_row(index1);
-    a.swap_row(index1, a.get_row(index2));
-    a.swap_row(index2, temp);
-    std::cout << "Swapped rows: \n";
+    for (int i = 0; i < size; ++i){
+        double temp = a.grab_val(index1, i);
+        a.add_spot(index1, i, a.grab_val(index2, i));
+        a.add_spot(index2, i, temp);
+    }
+    std::cout << "Swapped Rows: \n";
     a.print_matrix();
 }
 
@@ -160,7 +190,7 @@ void add_diag(MathMatrix a){
 void swap_col(MathMatrix a, int index1 =0, int index2=1){
     int size = a.get_size();
     if (index1 >= size || index2 >= size || index1 < 0 || index2 < 0){
-        std::cerr << "Invalid Index\n";
+        std::cout << "Invalid Index\n";
         throw std::exception();
     }
     int temp;
@@ -174,6 +204,98 @@ void swap_col(MathMatrix a, int index1 =0, int index2=1){
 
 }
 
+int readOptionalInt(const std::string& prompt, int defaultVal) {
+    std::string line;
+    std::cout << prompt;
+    std::getline(std::cin, line);
 
-//make main dont for get to free after adding 
+    if (line.empty()) return defaultVal;
 
+    std::stringstream ss(line);
+    int value;
+    ss >> value;
+    if (ss.fail()) {
+        std::cout << "Invalid input, using default " << defaultVal << "\n";
+        return defaultVal;
+    }
+
+    return value;
+}
+
+//make main dont for get to free after adding
+
+int main(){
+    std::string filename;
+    std::cout<< "Please enter the file name: ";
+    std::cin >> filename;
+    std::cout << "\n";
+    MathMatrix m1(1);
+    MathMatrix m2(1);
+    fill_matrixs(filename, m1, m2);
+    std::cout << "Matrix 1: \n";
+    m1.print_matrix();
+    std::cout << "Matrix 2: \n";
+    m2.print_matrix();
+    MathMatrix added = m1 + m2;
+    std::cout << "Added Matrixes: \n";
+    added.print_matrix();
+    added.~MathMatrix();
+    std::cout << "Multiplied Matrixes: \n";
+    MathMatrix mult = m1 * m2;
+    mult.print_matrix();
+    mult.~MathMatrix();
+    std::cout << "matrix1: \n";
+    add_diag(m1);
+    std::cout << "\n";
+    std::cout << "matrix2: \n";
+    add_diag(m2);
+    std::cout << "\n";
+    int index1 = 0, index2 = 1, num = 100;
+    std::cout << "matrix1: \n";
+    std::string dummy;
+    std::getline(std::cin, dummy);
+    index1 = readOptionalInt("Please enter the first row index(press enter to use the default): ", 0);
+    index2 = readOptionalInt("Please enter the second row index(press enter to use the default): ", 1);
+    swap_row(m1, index1, index2);
+    index1 = 0;
+    index2 = 1;
+    std::cout << "matrix2: \n";
+    index1 = readOptionalInt("Please enter the first row index(press enter to use the default): ", 0);
+    index2 = readOptionalInt("Please enter the second row index(press enter to use the default): ", 1);
+    swap_row(m2, index1, index2);
+    index1 = 0;
+    index2 = 1;
+    std::cout << "matrix1: \n";
+    index1 = readOptionalInt("Please enter the first col index(press enter to use the default): ", 0);
+    index2 = readOptionalInt("Please enter the second col index(press enter to use the default): ", 1);
+    swap_col(m1, index1, index2);
+    index1 = 0;
+    index2 = 1;
+    std::cout << "matrix2: \n";
+    index1 = readOptionalInt("Please enter the first col index(press enter to use the default): ", 0);
+    index2 = readOptionalInt("Please enter the second col index(press enter to use the default): ", 1);
+    swap_col(m2, index1, index2);
+    index1 = 0;
+    index2 = 0;
+    num = 100;
+    std::cout << "matrix1 update: \n";
+    index1 = readOptionalInt("Please enter the first index to update(press enter to use the default): ", 0);
+    index2 = readOptionalInt("Please enter the second index to update(press enter to use the default): ", 0);
+    num = readOptionalInt("Please enter the value you would like to update(press enter to use the default): ", 100);
+    m1.add_spot(index1, index2, num);
+    std::cout << "Updated Matrix: \n";
+    m1.print_matrix();
+    index1 = 0;
+    index2 = 0;
+    num = 100;
+    std::cout << "matrix2 update: \n";
+    index1 = readOptionalInt("Please enter the first index to update(press enter to use the default): ", 0);
+    index2 = readOptionalInt("Please enter the second index to update(press enter to use the default): ", 0);
+    num = readOptionalInt("Please enter the value you would like to update(press enter to use the default): ", 100);
+    m2.add_spot(index1, index2, num);
+    std::cout << "Updated Matrix: \n";
+    m2.print_matrix();
+    m1.~MathMatrix();
+    m2.~MathMatrix();
+    return 0;
+}

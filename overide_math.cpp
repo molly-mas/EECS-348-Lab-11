@@ -3,6 +3,7 @@
 //Date: 11/11/25
 //Assignment: EECS 348 Lab11
 //Purpose: Matrix opperations with opperator overflow and exprementing with classes in C++
+//Lab: Wednesday 9am
 #include <iostream>
 #include <fstream> 
 #include <string>

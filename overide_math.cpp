@@ -64,7 +64,7 @@ void fill_matrixs(std::string filename, MathMatrix& m1, MathMatrix& m2){
     std::ifstream theFile (filename);
     int size;
     if (!theFile){
-        throw new std::runtime_error('this file cant be found');
+        throw new std::runtime_error("this file cant be found");
     }
 
     theFile >> size;
